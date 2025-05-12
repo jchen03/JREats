@@ -10,6 +10,52 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
+
+model Cart {
+  id        String   @id @default(cuid())
+  session_id    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items     CartItem[]
+  totalPrice Float
+
+  order     Order?   @relation("CartOrder")
+}
+
+model Item {
+  id        String   @id @default(cuid())
+  name String
+  description  String
+  imageUrl String
+  price     Float
+
+  cartItems   CartItem[]
+}
+
+model CartItem {
+  id       String @id @default(cuid())
+  cart     Cart   @relation(fields: [cart_id], references: [id])
+  cart_id  String
+
+  item     Item   @relation(fields: [item_id], references: [id])
+  item_id  String
+
+  quantity Int
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  session_id    String
+  totalPrice Float
+  orderedAt DateTime @default(now())
+  status    String
+
+  cart       Cart     @relation("CartOrder", fields: [cart_id], references: [id])  // Define relation to Cart
+  cart_id    String   @unique// Foreign key to Cart
+}
+
+
