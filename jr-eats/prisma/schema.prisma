@@ -53,8 +53,8 @@ model Order {
   orderedAt DateTime @default(now())
   status    String
 
-  cart       Cart     @relation("CartOrder", fields: [cart_id], references: [id])  // Define relation to Cart
-  cart_id    String   @unique// Foreign key to Cart
+  cart       Cart     @relation("CartOrder", fields: [cart_id], references: [id])  
+  cart_id    String   @unique
 }
 
 
