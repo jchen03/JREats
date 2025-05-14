@@ -1,8 +1,11 @@
-import Image from "next/image";
 import MenuItem from "../components/MenuItem/MenuItem";
 import Navbar from "@/components/Navbar/Navbar";
+import prisma from "@/lib/db";
+import { Item } from "@/generated/prisma";
 
-const MainPage = () => {
+const MainPage = async () => {
+  const menuItems : Item[] = await prisma.item.findMany();
+  
   return (
     <div>
       <Navbar />
@@ -11,19 +14,16 @@ const MainPage = () => {
         Food Menu
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        <MenuItem
-          title="Meat Bowl"
-          description="Juicy grilled meat with rice, veggies, and sauce."
-          price={12.99}
-          imageSrc="/meatbowl.jpg"
-        />
-
-        <MenuItem
-          title="Salad Bowl"
-          description="Roasted veggies, quinoa, and avocado dressing."
-          price={10.99}
-          imageSrc="/saladbowl.jpg"
-        />
+        {menuItems.map((item : Item) => (
+          <MenuItem
+            key={item.id}
+            id={item.id}
+            title={item.name}
+            description={item.description}
+            price={item.price}
+            imageSrc={item.imageUrl}
+          />
+        ))}
       </div>
     </div>
     </div>
