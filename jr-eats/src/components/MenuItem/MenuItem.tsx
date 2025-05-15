@@ -1,7 +1,6 @@
 "use client";
 import { addItemToCart } from "@/actions/actions";
-import toast from "react-hot-toast";
-
+import { toast } from "react-toastify";
 type MenuItemProps = {
   id: string;
   title: string;
@@ -19,6 +18,9 @@ const MenuItem: React.FC<MenuItemProps> = ({
   imageSrc,
 }) => {
 
+  const handleAddToCart = async (title : string) => {
+    toast.success(`${title} added to cart!`);  
+  };
   return (
     <form action={addItemToCart}>
       <input type="hidden" name="itemId" value={id} />
@@ -34,7 +36,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
         <button
           className="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl transition"
           type="submit"
-          // onClick={handleAddToCart}
+          onClick={() => handleAddToCart(title)}
         >
           Add to Cart
         </button>
