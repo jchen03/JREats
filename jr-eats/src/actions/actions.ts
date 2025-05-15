@@ -55,13 +55,22 @@ export async function addItemToCart(formdata: FormData) : Promise<void> {
         });
     }
     
+    // Update the cart total price
+    const cartItems = await prisma.cartItem.findMany({
+        where: { cart_id: cart.id },
+        include: {
+            item: true, 
+        },
+    });
+    const totalPrice = cartItems.reduce((sum, cartItem) => {
+        return sum + cartItem.quantity * cartItem.item.price;
+    }, 0);
+    
     // Add the item to the cart
     cart = await prisma.cart.update({
         where: { id: cart.id },
         data: {
-            totalPrice: {
-                increment: item.price,
-            },
+            totalPrice: totalPrice,
         },
     });
 }

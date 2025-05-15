@@ -10,10 +10,11 @@ const Navbar = () => {
       </Link>
 
       {/* Cart Button */}
-      <Link href="/cart">
-        <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
+     <Link
+        href="/cart"
+        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+      >
           Cart
-        </button>
       </Link>
     </nav>
   );

@@ -1,28 +1,37 @@
 import Navbar from "@/components/Navbar/Navbar";
+import prisma from "@/lib/db";
+import { cookies } from "next/headers";
 
-const CartPage = () => {
+const CartPage = async () => {
     // Hardcoded cart items
-    const cartItems = [
-      {
-        id: "1",
-        name: "Meat Bowl",
-        price: 10.99,
-        quantity: 2,
-        imageUrl: "/meatbowl.jpg",
+    // const cartItems = [
+    //   {
+    //     id: "1",
+    //     name: "Meat Bowl",
+    //     price: 10.99,
+    //     quantity: 2,
+    //     imageUrl: "/meatbowl.jpg",
+    //   },
+    //   {
+    //     id: "2",
+    //     name: "Veggie Bowl",
+    //     price: 8.99,
+    //     quantity: 1,
+    //     imageUrl: "/saladbowl.jpg",
+    //   },
+    // ];
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get("sessionId")?.value;
+    console.log("Session ID:", sessionId);
+    const cart = await prisma.cart.findFirst({
+      where: { session_id: sessionId },
+    });
+    const cartItems = await prisma.cartItem.findMany({
+      where: { cart_id: cart?.id }, 
+      include: {
+        item: true,
       },
-      {
-        id: "2",
-        name: "Veggie Bowl",
-        price: 8.99,
-        quantity: 1,
-        imageUrl: "/saladbowl.jpg",
-      },
-    ];
-  
-    // Calculate total price
-    const calculateTotal = () => {
-      return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-    };
+    });
   
     return (
       <div>
@@ -40,10 +49,10 @@ const CartPage = () => {
                   {cartItems.map((item) => (
                     <li key={item.id} className="flex items-center justify-between py-4 border-b">
                       <div className="flex items-center">
-                        <img src={item.imageUrl} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
+                        <img src={item.item.imageUrl} alt={item.item.name} className="w-16 h-16 object-cover rounded-md" />
                         <div className="ml-4">
-                          <h3 className="font-semibold">{item.name}</h3>
-                          <p className="text-gray-600">Price: ${item.price}</p>
+                          <h3 className="font-semibold">{item.item.name}</h3>
+                          <p className="text-gray-600">Price: ${item.item.price}</p>
                           <p className="text-gray-600">Quantity: {item.quantity}</p>
                         </div>
                       </div>
@@ -54,7 +63,7 @@ const CartPage = () => {
                 {/* Total Price */}
                 <div className="mt-6 flex justify-between items-center text-xl font-semibold">
                   <span>Total:</span>
-                  <span>${calculateTotal().toFixed(2)}</span>
+                  <span>${cart?.totalPrice.toFixed(2)}</span>
                 </div>
       
                 {/* Checkout Button */}

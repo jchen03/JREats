@@ -1,6 +1,6 @@
 "use client";
 import { addItemToCart } from "@/actions/actions";
-import React from "react";
+import toast from "react-hot-toast";
 
 type MenuItemProps = {
   id: string;
@@ -18,6 +18,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
   price,
   imageSrc,
 }) => {
+
   return (
     <form action={addItemToCart}>
       <input type="hidden" name="itemId" value={id} />
@@ -33,11 +34,14 @@ const MenuItem: React.FC<MenuItemProps> = ({
         <button
           className="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl transition"
           type="submit"
+          // onClick={handleAddToCart}
         >
           Add to Cart
         </button>
+        
       </div>
     </form>
+
   );
 };
 
