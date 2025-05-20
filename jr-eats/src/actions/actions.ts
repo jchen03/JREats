@@ -11,40 +11,38 @@ type FullCartItem = Prisma.CartItemGetPayload<{
 }>;
 
 export async function getOrCreateSessionId(): Promise<string> {
-  const cookieStore = await cookies()
-  let sessionId = cookieStore.get('sessionId')?.value
+    // Check if the session ID cookie exists
+    const cookieStore = await cookies()
+    let sessionId = cookieStore.get('sessionId')?.value
+    // If not, create a new session ID and set it in the cookies
+    if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        (await cookies()).set('sessionId', sessionId, {
+        httpOnly: true,
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
+        })
+    }
 
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    (await cookies()).set('sessionId', sessionId, {
-      httpOnly: true,
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-    })
-  }
-
-  return sessionId
+    return sessionId
 }
 
-// export async function getTotalPrice(cartId: string): Promise<number> {
-//     const cart = await prisma.cart.findUnique({
-//         where: { id: cartId },
-//     });
-//     if (!cart) {
-//         throw new Error('Cart not found');
-//     }
-//     return cart.totalPrice;
-// }
-
 export async function getCartItems(): Promise<FullCartItem[]> {
+    // Get the session ID from cookies
     const cookieStore = await cookies();
     const sessionId = cookieStore.get("sessionId")?.value;
+    // If no session ID, return an empty list
+    if (!sessionId) {
+        return [];
+    }
+    // Find the cart associated with the session ID
     const cart = await prisma.cart.findFirst({
         where: { session_id: sessionId },
     });
     if (!cart) {
         return [];
     }
+    // Find the cart items associated with the cart
     const cartItems = await prisma.cartItem.findMany({
         where: { cart_id: cart.id },
         include: {
