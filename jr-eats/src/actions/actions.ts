@@ -4,6 +4,11 @@ import prisma from "@/lib/db";
 import { Item, CartItem, Cart } from "@/generated/prisma";
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { Prisma } from "@prisma/client";
+
+type FullCartItem = Prisma.CartItemGetPayload<{
+  include: { item: true };
+}>;
 
 export async function getOrCreateSessionId(): Promise<string> {
   const cookieStore = await cookies()
@@ -14,11 +19,60 @@ export async function getOrCreateSessionId(): Promise<string> {
     (await cookies()).set('sessionId', sessionId, {
       httpOnly: true,
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     })
   }
 
   return sessionId
+}
+
+// export async function getTotalPrice(cartId: string): Promise<number> {
+//     const cart = await prisma.cart.findUnique({
+//         where: { id: cartId },
+//     });
+//     if (!cart) {
+//         throw new Error('Cart not found');
+//     }
+//     return cart.totalPrice;
+// }
+
+export async function getCartItems(): Promise<FullCartItem[]> {
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get("sessionId")?.value;
+    const cart = await prisma.cart.findFirst({
+        where: { session_id: sessionId },
+    });
+    if (!cart) {
+        return [];
+    }
+    const cartItems = await prisma.cartItem.findMany({
+        where: { cart_id: cart.id },
+        include: {
+            item: true,
+        },
+    });
+    return cartItems;
+}
+
+export async function updateCartTotalPrice(cartId: string): Promise<void> {
+    // Get the cart items
+    const cartItems = await prisma.cartItem.findMany({
+        where: { cart_id: cartId },
+        include: {
+        item: true,
+        },
+    });
+    
+    //Calculate the total price
+    const totalPrice = cartItems.reduce((sum, cartItem) => {
+        return sum + cartItem.quantity * cartItem.item.price;
+    }, 0);
+    
+    // Update the cart total price
+    await prisma.cart.update({
+        where: { id: cartId },
+        data: { totalPrice: totalPrice },
+    });
 }
 
 export async function addItemToCart(formdata: FormData) : Promise<void> {
@@ -55,22 +109,56 @@ export async function addItemToCart(formdata: FormData) : Promise<void> {
         });
     }
     
-    // Update the cart total price
-    const cartItems = await prisma.cartItem.findMany({
-        where: { cart_id: cart.id },
-        include: {
-            item: true, 
-        },
-    });
-    const totalPrice = cartItems.reduce((sum, cartItem) => {
-        return sum + cartItem.quantity * cartItem.item.price;
-    }, 0);
-    
-    // Add the item to the cart
-    cart = await prisma.cart.update({
-        where: { id: cart.id },
-        data: {
-            totalPrice: totalPrice,
-        },
-    });
+    await updateCartTotalPrice(cart.id);
 }
+
+
+export async function addItemToCartOnClick( itemId : string ) : Promise<void> {
+    // Check if the item exists
+    const cartItemId = itemId;
+    const cartItem = await prisma.cartItem.findUnique({
+        where: { id: cartItemId },
+    });
+    if (!cartItem) {
+        throw new Error('Cart item not found');
+    }
+    // Add the item to the cart
+    await prisma.cartItem.update({
+        where: { id: cartItemId },
+        data: { quantity: { increment: 1 } },
+    });
+   
+        
+
+    // Update the cart total price
+    await updateCartTotalPrice(cartItem.cart_id);
+}
+
+export async function removeItemFromCartOnClick(itemId : string) : Promise<void> {
+    // Get the cart item
+    const cartItemId = itemId;
+    const cartItem = await prisma.cartItem.findUnique({
+        where: { id: cartItemId },
+    });
+    if (!cartItem) {
+        throw new Error('Cart item not found');
+    }
+    // Check if the cart item has a quantity greater than 1
+    if (cartItem.quantity > 1) {
+        // If so, decrement the quantity
+        await prisma.cartItem.update({
+            where: { id: cartItemId },
+            data: { quantity: { decrement: 1 } },
+        });
+    } else {
+        // If not, delete the cart item
+        await prisma.cartItem.delete({
+            where: { id: cartItemId },
+        });
+    }
+
+    // Update the cart total price
+    await updateCartTotalPrice(cartItem.cart_id);
+
+}
+
