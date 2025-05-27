@@ -1,5 +1,6 @@
 "use client";
 import { addItemToCartOnClick, getCartItems, removeItemFromCartOnClick } from "@/actions/actions";
+import Link from "next/link";
 import { use, useEffect, useState, useTransition } from "react";
 
 type CartItem = {
@@ -93,11 +94,13 @@ const CartPageItemsClient = ({ items }: { items: CartItem[] }) => {
                 </div>
       
                 {/* Checkout Button */}
-                <div className="mt-6 text-center">
-                  <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition">
-                    Proceed to Checkout
-                  </button>
-                </div>
+                <form action="/api/checkout" method="POST" className="mt-6">
+                  <div className="mt-6 text-center">
+                    <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition">
+                      Proceed to Checkout
+                    </button>
+                  </div>
+                </form>                
               </div>
             )}
           </div>

@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/db";
 import { Item, CartItem, Cart } from "@/generated/prisma";
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { Prisma } from "@prisma/client";
 
