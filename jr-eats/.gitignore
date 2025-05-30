@@ -45,3 +45,7 @@ next-env.d.ts
 *.sqlite3
 *.db
 *.db-journal
+
+# Prisma generated files
+node_modules/
+.prisma/
